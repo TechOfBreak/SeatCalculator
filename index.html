@@ -40,36 +40,38 @@
   </div>
 
   <script>
+    // 参議院
     const sangiinParties = [
-      { name: "自由民主党・無所属の会", seats: 109 },
-      { name: "公明党", seats: 25 },
-      { name: "立憲民主党・無所属", seats: 61 },
-      { name: "日本維新の会", seats: 20 },
-      { name: "国民民主党・無所属クラブ", seats: 14 },
-      { name: "れいわ新選組", seats: 5 },
-      { name: "日本共産党", seats: 11 },
-      { name: "社会民主党", seats: 1 },     // 修正：参議院で 1 議席
-      { name: "有志の会", seats: 4 },
-      { name: "参政党", seats: 3 },
+      // 与党
+      { name: "自由民主党", seats: 100 },
+      { name: "日本維新の会", seats: 19 },
+      // 野党
+      { name: "立憲民主党・社民・無所属", seats: 42 },
+      { name: "国民民主党・新緑風会", seats: 25 },
+      { name: "公明党", seats: 21 },
+      { name: "参政党", seats: 15 },
+      { name: "日本共産党", seats: 7 },
+      { name: "れいわ新選組", seats: 6 },
       { name: "日本保守党", seats: 2 },
-      { name: "チームみらい", seats: 1 },     // 修正：参議院で 1 議席
-      { name: "無所属", seats: 5 }
+      { name: "沖縄の風", seats: 2 },
+      { name: "各派に属しない議員", seats: 9 }
+      // { name: "欠員", seats: 0 }
     ];
 
+    // 衆議院
     const shugiinParties = [
-      { name: "自由民主党・無所属の会", seats: 196 },
-      { name: "公明党", seats: 24 },
+      // 与党
+      { name: "自由民主党・無所属の会", seats: 199 },
+      { name: "日本維新の会", seats: 34 },
+      // 野党
       { name: "立憲民主党・無所属", seats: 148 },
-      { name: "日本維新の会", seats: 35 },
       { name: "国民民主党・無所属クラブ", seats: 27 },
+      { name: "公明党", seats: 24 },
       { name: "れいわ新選組", seats: 9 },
       { name: "日本共産党", seats: 8 },
-      { name: "社会民主党", seats: 1 },     // 修正：衆議院で 1 議席 所属
       { name: "有志の会", seats: 4 },
       { name: "参政党", seats: 3 },
-      { name: "日本保守党", seats: 2 },
-      // チームみらいは議席 0 → 省略するか 0 議席で入れてもよい
-      // { name: "チームみらい", seats: 0 },
+      { name: "減税保守こども", seats: 3 },
       { name: "無所属", seats: 6 }
     ];
 

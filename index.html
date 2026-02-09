@@ -42,10 +42,8 @@
   <script>
     // 参議院
     const sangiinParties = [
-      // 与党
       { name: "自由民主党", seats: 100 },
       { name: "日本維新の会", seats: 19 },
-      // 野党
       { name: "立憲民主党・社民・無所属", seats: 42 },
       { name: "国民民主党・新緑風会", seats: 25 },
       { name: "公明党", seats: 21 },
@@ -55,16 +53,12 @@
       { name: "日本保守党", seats: 2 },
       { name: "沖縄の風", seats: 2 },
       { name: "各派に属しない議員", seats: 9 }
-      // { name: "欠員", seats: 0 }
     ];
 
-    // 衆議院（2026年〈令和8年〉2月9日時点）
+    // 衆議院
     const shugiinParties = [
-      // 与党（352）
       { name: "自由民主党", seats: 316 },
       { name: "日本維新の会", seats: 36 },
-
-      // 野党（111）
       { name: "中道改革連合", seats: 49 },
       { name: "国民民主党", seats: 28 },
       { name: "参政党", seats: 15 },
@@ -72,11 +66,8 @@
       { name: "日本共産党", seats: 4 },
       { name: "れいわ新選組", seats: 1 },
       { name: "減税日本・ゆうこく連合", seats: 1 },
-
-    // 無所属（4）
-    { name: "無所属", seats: 4 }
-];
-
+      { name: "無所属", seats: 4 }
+    ];
 
     function renderCheckboxes(containerId, parties, total) {
       const container = document.getElementById(containerId);
@@ -92,25 +83,40 @@
     renderCheckboxes("sangiinContainer", sangiinParties, 248);
     renderCheckboxes("shugiinContainer", shugiinParties, 465);
 
+    function makeResultMessage(seats, totalSeats) {
+      const majority = Math.floor(totalSeats / 2) + 1;
+      const twoThirds = Math.ceil(totalSeats * 2 / 3);
+
+      let msg = `選択した合計議席：${seats} / ${totalSeats}<br>`;
+
+      msg += seats >= majority
+        ? "✅ 過半数（1/2超）を満たしています。<br>"
+        : "⚠️ 過半数（1/2超）に届いていません。<br>";
+
+      msg += seats >= twoThirds
+        ? "✅ 3分の2（2/3超）を満たしています。"
+        : "⚠️ 3分の2（2/3超）に届いていません。";
+
+      return msg;
+    }
+
     function calcSangiin() {
       const seats = Array.from(document.querySelectorAll('.sangiin:checked'))
         .map(e => parseInt(e.value)).reduce((a,b)=>a+b,0);
-      const totalSeats = 248;
-      const majority = Math.floor(totalSeats / 2) + 1;
-      let msg = `選択した合計議席：${seats} / ${totalSeats}<br>`;
-      msg += seats >= majority ? '✅ 過半数を超えています。' : '⚠️ 過半数に届いていません。';
-      document.getElementById('sangiinResult').innerHTML = msg;
+
+      document.getElementById('sangiinResult').innerHTML =
+        makeResultMessage(seats, 248);
+
       updateChart();
     }
 
     function calcShugiin() {
       const seats = Array.from(document.querySelectorAll('.shugiin:checked'))
         .map(e => parseInt(e.value)).reduce((a,b)=>a+b,0);
-      const totalSeats = 465;
-      const majority = Math.floor(totalSeats / 2) + 1;
-      let msg = `選択した合計議席：${seats} / ${totalSeats}<br>`;
-      msg += seats >= majority ? '✅ 過半数を超えています。' : '⚠️ 過半数に届いていません。';
-      document.getElementById('shugiinResult').innerHTML = msg;
+
+      document.getElementById('shugiinResult').innerHTML =
+        makeResultMessage(seats, 465);
+
       updateChart();
     }
 
@@ -122,12 +128,14 @@
         const value = parseInt(chk.value);
         selected[name] = (selected[name] || 0) + value;
       });
+
       const labels = Object.keys(selected);
       const data = Object.values(selected);
       const total = data.reduce((a,b)=>a+b,0);
 
       const ctx = document.getElementById('combinedChart').getContext('2d');
       if (chartInstance) chartInstance.destroy();
+
       chartInstance = new Chart(ctx, {
         type: 'pie',
         data: {
@@ -145,10 +153,9 @@
             tooltip: {
               callbacks: {
                 label: function(context) {
-                  const name = context.label;
                   const value = context.raw;
                   const percent = ((value / total) * 100).toFixed(1);
-                  return `${name}: ${value}議席 (${percent}%)`;
+                  return `${context.label}: ${value}議席 (${percent}%)`;
                 }
               }
             },

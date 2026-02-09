@@ -43,6 +43,39 @@
 </div>
 
 <script>
+/* ===== ライン描画プラグイン（★修正点ここ） ===== */
+const thresholdLinePlugin = {
+  id: "thresholdLine",
+  beforeDatasetsDraw(chart, args, pluginOptions) { // ← ここが重要
+    const { ctx } = chart;
+    const meta = chart.getDatasetMeta(0);
+    if (!meta || !meta.data.length) return;
+
+    const arc = meta.data[0];
+    const centerX = arc.x;
+    const centerY = arc.y;
+    const outerRadius = arc.outerRadius;
+
+    const drawLine = (ratio, color, width) => {
+      const startAngle = -Math.PI;
+      const angle = startAngle + Math.PI * ratio;
+
+      ctx.save();
+      ctx.beginPath();
+      ctx.strokeStyle = color;
+      ctx.lineWidth = width;
+      ctx.arc(centerX, centerY, outerRadius, angle, angle + 0.0001);
+      ctx.stroke();
+      ctx.restore();
+    };
+
+    drawLine(pluginOptions.majorityRatio, "#000000", 3);   // 過半数
+    drawLine(pluginOptions.twoThirdsRatio, "#555555", 3); // 2/3
+  }
+};
+
+Chart.register(thresholdLinePlugin);
+
 /* ===== データ ===== */
 
 const sangiin = {
@@ -86,16 +119,13 @@ const shugiin = {
   ]
 };
 
-/* ===== チェックボックス ===== */
+/* ===== UI生成 ===== */
 
 function renderCheckboxes(containerId, house) {
   document.getElementById(containerId).innerHTML =
     house.parties.map(p =>
       `<label>
-        <input type="checkbox"
-               class="${house.cls}"
-               data-name="${p.name}"
-               data-seats="${p.seats}">
+        <input type="checkbox" class="${house.cls}" data-name="${p.name}" data-seats="${p.seats}">
         ${p.name}（${p.seats}）
       </label>`
     ).join("");
@@ -104,7 +134,7 @@ function renderCheckboxes(containerId, house) {
 renderCheckboxes("sangiinContainer", sangiin);
 renderCheckboxes("shugiinContainer", shugiin);
 
-/* ===== 共通処理 ===== */
+/* ===== 計算 & 描画 ===== */
 
 let charts = {};
 
@@ -116,30 +146,29 @@ function calcHouseResult(house) {
   const twoThirds = Math.ceil(house.total * 2 / 3);
 
   document.getElementById(house.resultId).innerHTML =
-    `選択議席：${seats} / ${house.total}　
-     ${seats >= majority ? "✅ 過半数" : "⚠️ 過半数未満"}　
-     ${seats >= twoThirds ? "✅ 2/3" : "⚠️ 2/3未満"}`;
+    `選択議席：${seats} / ${house.total}
+     ｜${seats >= majority ? "✅ 過半数" : "❌ 過半数未満"}
+     ｜${seats >= twoThirds ? "✅ 2/3" : "❌ 2/3未満"}`;
 
-  return seats;
+  return {
+    majorityRatio: majority / house.total,
+    twoThirdsRatio: twoThirds / house.total
+  };
 }
 
-function buildHouseChart(house) {
+function buildHouseChart(house, ratios) {
   const selectedNames = new Set(
     [...document.querySelectorAll(`.${house.cls}:checked`)]
       .map(c => c.dataset.name)
   );
 
-  const selected = house.parties
-    .filter(p => selectedNames.has(p.name))
-    .sort((a,b)=>b.seats-a.seats);
-
-  const unselected = house.parties
-    .filter(p => !selectedNames.has(p.name))
-    .sort((a,b)=>b.seats-a.seats)
-    .reverse();
+  const selected = house.parties.filter(p=>selectedNames.has(p.name))
+                                .sort((a,b)=>b.seats-a.seats);
+  const unselected = house.parties.filter(p=>!selectedNames.has(p.name))
+                                  .sort((a,b)=>b.seats-a.seats)
+                                  .reverse();
 
   const ordered = [...selected, ...unselected];
-  const borderIndex = selected.length - 1;
 
   if (charts[house.chartId]) charts[house.chartId].destroy();
 
@@ -152,8 +181,8 @@ function buildHouseChart(house) {
         datasets: [{
           data: ordered.map(p=>p.seats),
           backgroundColor: ordered.map(p=>p.color),
-          borderWidth: ordered.map((_,i)=> i===borderIndex ? 4 : 1),
-          borderColor: ordered.map((_,i)=> i===borderIndex ? "#000" : "#fff")
+          borderWidth: 1,
+          borderColor: "#fff"
         }]
       },
       options: {
@@ -162,26 +191,22 @@ function buildHouseChart(house) {
         cutout: "60%",
         plugins: {
           legend: { position: "bottom" },
-          title: { display: true, text: house.title }
+          title: { display: true, text: house.title },
+          thresholdLine: ratios
         }
       }
     }
   );
 }
 
-/* ===== ボタン用 ===== */
-
 function calcSangiin() {
-  calcHouseResult(sangiin);
-  buildHouseChart(sangiin);
+  buildHouseChart(sangiin, calcHouseResult(sangiin));
 }
 
 function calcShugiin() {
-  calcHouseResult(shugiin);
-  buildHouseChart(shugiin);
+  buildHouseChart(shugiin, calcHouseResult(shugiin));
 }
 
-// 初期表示
 calcSangiin();
 calcShugiin();
 </script>
